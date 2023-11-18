@@ -1,105 +1,159 @@
+// QUESTION 1
+#include <stdio.h>
+
+int main() {
+    FILE *file;
+    char filename[] = "lab5.txt";
+
+    file = fopen(filename, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Error in creating a file.\n");
+        return 1;
+    }
+
+    fprintf(file, "Hello, I'm Anoosha Khalid.\n");
+    fclose(file);
+
+    file = fopen(filename, "a");
+    if (file == NULL) {
+        fprintf(stderr, "Unable to open the file in append mode.\n");
+        return 1;
+    }
+
+    fprintf(file, "I'm student of CIS Department.\n");
+    fclose(file);
+
+    file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Unable to open the file.\n");
+        return 1;
+    }
+
+    char buffer[100];
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        printf("%s", buffer);
+    }
+
+    fclose(file);
+
+    return 0;
+}
+
+
+// QUESTION 2
 #include <stdio.h>
 #include <stdlib.h>
 
-// Node definition for a linked list
-struct Node {
-    int data;
-    struct Node* next;
-};
+int main() {
+    FILE *file;
+    char filename[] = "example.txt";
 
-// Function to insert a new node at the end of a linked list
-void insertAtEnd(struct Node** head, int data) {
-    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
-    newNode->data = data;
-    newNode->next = NULL;
-
-    if (*head == NULL) {
-        *head = newNode;
-    } else {
-        struct Node* temp = *head;
-        while (temp->next != NULL) {
-            temp = temp->next;
-        }
-        temp->next = newNode;
+    file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Unable to open the file.\n");
+        return 1;
     }
-}
 
-// Function to merge two sorted linked lists into one
-struct Node* mergeSortedLists(struct Node* list1, struct Node* list2) {
-    struct Node* mergedList = NULL;
-
-    while (list1 != NULL && list2 != NULL) {
-        if (list1->data < list2->data) {
-            insertAtEnd(&mergedList, list1->data);
-            list1 = list1->next;
-        } else {
-            insertAtEnd(&mergedList, list2->data);
-            list2 = list2->next;
+    int wordCount = 0;
+    char ch;
+    while ((ch = fgetc(file)) != EOF) {
+        if (ch == ' ' || ch == '\n' || ch == '\t') {
+            wordCount++;
         }
     }
+    fclose(file);
+    printf("Total number of words: %d\n", wordCount);
 
-    // Add remaining elements from list1, if any
-    while (list1 != NULL) {
-        insertAtEnd(&mergedList, list1->data);
-        list1 = list1->next;
-    }
-
-    // Add remaining elements from list2, if any
-    while (list2 != NULL) {
-        insertAtEnd(&mergedList, list2->data);
-        list2 = list2->next;
-    }
-
-    return mergedList;
+    return 0;
 }
 
-// Function to print a linked list
-void printList(struct Node* head) {
-    while (head != NULL) {
-        printf("%d -> ", head->data);
-        head = head->next;
+
+
+// QUESTION 3
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_NAME_LENGTH 50
+
+// Structure to represent a student record
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    int rollNumber;
+    float marks;
+} Student;
+
+// Function to add a student record to the file
+void addStudentToFile(const char *fileName, const Student *student) {
+    FILE *file = fopen(fileName, "a");
+
+    if (file == NULL) {
+        perror("Error opening file for appending");
+        exit(EXIT_FAILURE);
     }
-    printf("NULL\n");
+
+    fprintf(file, "%s %d %.2f\n", student->name, student->rollNumber, student->marks);
+
+    fclose(file);
 }
 
-// Free memory allocated for a linked list
-void freeList(struct Node* head) {
-    struct Node* temp;
-    while (head != NULL) {
-        temp = head;
-        head = head->next;
-        free(temp);
+// Function to display the current student records from the file
+void displayStudentRecords(const char *fileName) {
+    FILE *file = fopen(fileName, "r");
+
+    if (file == NULL) {
+        perror("Error opening file for reading");
+        exit(EXIT_FAILURE);
     }
+
+    printf("Student Records:\n");
+
+    Student student;
+    while (fscanf(file, "%s %d %f", student.name, &student.rollNumber, &student.marks) == 3) {
+        printf("Name: %s, Roll Number: %d, Marks: %.2f\n", student.name, student.rollNumber, student.marks);
+    }
+
+    fclose(file);
 }
 
 int main() {
-    struct Node* list1 = NULL;
-    struct Node* list2 = NULL;
+    const char *fileName = "students.txt";
+    Student student;
+    int choice;
 
-    // Example lists
-    insertAtEnd(&list1, 1);
-    insertAtEnd(&list1, 3);
-    insertAtEnd(&list1, 5);
+    do {
+        printf("\nStudent Record Management\n");
+        printf("1. Add Student\n");
+        printf("2. View Students\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
 
-    insertAtEnd(&list2, 2);
-    insertAtEnd(&list2, 4);
-    insertAtEnd(&list2, 6);
+        switch (choice) {
+            case 1:
+                printf("Enter student name: ");
+                scanf("%s", student.name);
+                printf("Enter student roll number: ");
+                scanf("%d", &student.rollNumber);
+                printf("Enter student marks: ");
+                scanf("%f", &student.marks);
 
-    printf("List 1: ");
-    printList(list1);
+                addStudentToFile(fileName, &student);
+                printf("Student record added.\n");
+                break;
 
-    printf("List 2: ");
-    printList(list2);
+            case 2:
+                displayStudentRecords(fileName);
+                break;
 
-    struct Node* mergedList = mergeSortedLists(list1, list2);
+            case 3:
+                printf("Exiting program.\n");
+                break;
 
-    printf("Merged List: ");
-    printList(mergedList);
+            default:
+                printf("Invalid choice. Please enter a valid option.\n");
+        }
 
-    // Free memory
-    freeList(list1);
-    freeList(list2);
-    freeList(mergedList);
+    } while (choice != 3);
 
     return 0;
 }
